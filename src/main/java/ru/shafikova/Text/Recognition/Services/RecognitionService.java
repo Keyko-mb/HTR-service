@@ -8,10 +8,12 @@ import java.util.stream.Stream;
 import leadtools.document.writer.*;
 import leadtools.ocr.*;
 import leadtools.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@Slf4j
 public class RecognitionService {
     public String recognize(MultipartFile file) {
         try {
@@ -19,21 +21,23 @@ public class RecognitionService {
             Platform.loadLibrary(LTLibrary.LEADTOOLS);
             Platform.loadLibrary(LTLibrary.OCR);
             SetLicense();
+            log.info("License is confirmed");
             return RunICR(file);
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
             ex.printStackTrace();
+            log.error("Failed to recognize {}", ex.getMessage());
             return null;
         }
     }
 
-    static void SetLicense() throws IOException {
+    public void SetLicense() throws IOException {
         String licenseFile = "E:\\Program Files\\LEADTOOLS22\\Support\\Common\\License\\LEADTOOLS.LIC";
         String developerKey = Files.readString(Paths.get(licenseFile + ".key"));
         RasterSupport.setLicense(licenseFile, developerKey);
     }
 
-    public static String RunICR(MultipartFile inputFile) throws IOException {
+    public String RunICR(MultipartFile inputFile) throws IOException {
         String fileFormat = inputFile.getContentType().split("/")[1];
         String _file = "C:\\Users\\shafi\\Downloads\\Text Recognition\\Text-Recognition\\files\\file." + fileFormat;
         File file = new File(_file);
@@ -74,6 +78,7 @@ public class RecognitionService {
                     .forEach(File::delete);
         }
 
+        log.info("Successful recognition");
         return recognizedText.toString();
     }
 
